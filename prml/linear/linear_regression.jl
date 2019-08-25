@@ -1,45 +1,47 @@
-import numpy as np
-from prml.linear.regression import Regression
+include("Regression.jl")
 
+using LinearArgebra
+using Statistics
 
-class LinearRegression(Regression):
-    """
-    Linear regression model
-    y = X @ w
-    t ~ N(t|X @ w, var)
-    """
+mutable struct LinearRegression <: Regression
+    #Linear regression model
+    #y = X * w
+    #t ~ N(t|X * w, var)
 
-    def fit(self, X:np.ndarray, t:np.ndarray):
-        """
-        perform least squares fitting
-        Parameters
-        ----------
-        X : (N, D) np.ndarray
-            training independent variable
-        t : (N,) np.ndarray
-            training dependent variable
-        """
-        self.w = np.linalg.pinv(X) @ t
-        self.var = np.mean(np.square(X @ self.w - t))
+    w::Array{Float64, 1}
+    var::Float64
+end
 
-    def predict(self, X:np.ndarray, return_std:bool=False):
-        """
-        make prediction given input
-        Parameters
-        ----------
-        X : (N, D) np.ndarray
-            samples to predict their output
-        return_std : bool, optional
-            returns standard deviation of each predition if True
-        Returns
-        -------
-        y : (N,) np.ndarray
-            prediction of each sample
-        y_std : (N,) np.ndarray
-            standard deviation of each predition
-        """
-        y = X @ self.w
-        if return_std:
-            y_std = np.sqrt(self.var) + np.zeros_like(y)
-            return y, y_std
-        return y
+function fit(self::LinearRegression, X::Array{Float64, 2}, t::Array{Float64, 1})
+	#perform least squares fitting
+	#Parameters
+	#X : NxD Array{Float64, 2}
+	#    training independent variable
+	#t : N-element Array{Float64, 1}
+	#    training dependent variable
+
+	self.w = X \ t
+	self.var = mean((X * self.w - t).^2)
+end
+
+function predict(self::LinearRegression, X, return_std::Bool=false)
+	#make prediction given input
+	#Parameters
+	#----------
+	#X : NxD Array{Float64, 2}
+	#    samples to predict their output
+	#return_std : Bool, optional
+	#    returns standard deviation of each predition if true
+	#Returns
+	#-------
+	#y : N-element Array{Float64, 1}
+	#    prediction of each sample
+	#y_std : N-element Array{Float64, 1}
+	#    standard deviation of each predition
+
+	y = X * self.w
+	if return_std = true:
+	    y_std = self.var^2 + zeros(size(y))
+	    return y, y_std
+	return y
+end

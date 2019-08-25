@@ -1,6 +1,3 @@
-class Regression(object):
-    """
-    Base class for regressors
-    """
-    pass
-
+abstract type Regression
+    # Base class for regressors
+end
