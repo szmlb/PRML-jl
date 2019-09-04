@@ -1,51 +1,66 @@
-import itertools
-import functools
-import numpy as np
+using Combinatorics
 
+mutable struct PolynomialFeature
+	#=
+	polynomial features
+	transforms input array with polynomial features
+	Example
+	=======
+	x =
+	[a b;
+	 c d]
+	y = PolynomialFeatures(degree=2).transform(x)
+	y =
+	[1 a b a^2 a*b b^2;
+	 1 c d c^2 c*d d^2]
+	=#
 
-class PolynomialFeature(object):
-    """
-    polynomial features
-    transforms input array with polynomial features
-    Example
-    =======
-    x =
-    [[a, b],
-    [c, d]]
-    y = PolynomialFeatures(degree=2).transform(x)
-    y =
-    [[1, a, b, a^2, a * b, b^2],
-    [1, c, d, c^2, c * d, d^2]]
-    """
+	degree::Int64
 
-    def __init__(self, degree=2):
-        """
-        construct polynomial features
-        Parameters
-        ----------
-        degree : int
-            degree of polynomial
-        """
-        assert isinstance(degree, int)
-        self.degree = degree
+	function PolynomialFeature(degree)
+		#=
+		construct polynomial features
+		Parameters
+		----------
+		degree : Int64
+		    degree of polynomial
+		=#
 
-    def transform(self, x):
-        """
-        transforms input array with polynomial features
-        Parameters
-        ----------
-        x : (sample_size, n) ndarray
-            input array
-        Returns
-        -------
-        output : (sample_size, 1 + nC1 + ... + nCd) ndarray
-            polynomial features
-        """
-        if x.ndim == 1:
-            x = x[:, None]
-        x_t = x.transpose()
-        features = [np.ones(len(x))]
-        for degree in range(1, self.degree + 1):
-            for items in itertools.combinations_with_replacement(x_t, degree):
-                features.append(functools.reduce(lambda x, y: x * y, items))
-        return np.asarray(features).transpose()
+		@assert isinteger(degree) "Not an integer number"
+		new(degree)
+
+	end
+
+end
+
+function transform(self::PolynomialFeature, x)
+	#=
+	transforms input array with polynomial features
+	Parameters
+	----------
+	x : (sample_size)x(n) Array{Float64, 2}
+	    input array
+	Returns
+	-------
+	output : (sample_size)x(1 + nC1 + ... + nCd) Array{Float64, 2}
+	    polynomial features
+	=#
+
+	sample_size = size(x)[1]
+	features = []
+	for sample in 1:sample_size
+		features_tmp = [1.0]	
+		for degree in 1:self.degree
+			for items in with_replacement_combinations(x[sample, :], degree)
+				append!(features_tmp, prod(items))
+			end
+		end
+		if isempty(features) == true
+			features = features_tmp'	
+		else
+			features = vcat(features, features_tmp')
+		end
+	end
+
+	return features
+end
